@@ -11,6 +11,15 @@ class Cliente:
     def esperando_aprobacion(self):
         print(f"\n ¡Bienvenido al juego! Esperando aprobacion para unirte al equipo.")
 
+    def nombre_existe(self):
+        print(f"\n Este usuario ya se encuentra en un equipo.")
+
+    def aprobacion_confirmada(self):
+        print(f"\n Has sido aceptado en el equipo!.")
+
+    def aprobacion_denegada(self):
+        print(f"\n NO has sido aceptado en el equipo.")
+
     def aprobacion_integrante(self, nombre):
         while True:
             respuesta = input(f"\n{nombre} ha solicitado unirse a tu equipo. ¿Aceptas? (S/N): ").strip().upper()

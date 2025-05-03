@@ -11,13 +11,14 @@ class ServicioJuego:
 
         self.equipos = {
             "1": {
-                "integrantes": set(),
-                "proxies" : set(),
+                "integrantes": [],
+                "uris": [],  # Lista de URIs (str)
                 "posicion": 0,
                 "listo": False
             },
             "2": {
-                "integrantes": set(),
+                "integrantes": [],
+                "uris": [],
                 "posicion": 0,
                 "listo": False
             }
@@ -30,50 +31,57 @@ class ServicioJuego:
         self.ganador = None
 
     def registrar_integrante(self, nombre, equipo, uri_cliente):
-        if self.juego_iniciado:
-            return False, "El juego ya ha comenzado."
+        print("Cliente conectado:", uri_cliente)
 
         cliente_proxy = Pyro5.api.Proxy(uri_cliente)
 
+        # Verificar si el nombre ya existe en cualquier equipo
+        for data in self.equipos.values():
+            if nombre in data["integrantes"]:
+                cliente_proxy.nombre_existe()
+                return
+
+        # Si el equipo no existe, se crea
         if equipo not in self.equipos:
             self.equipos[equipo] = {
-                "integrantes": set(),
-                "proxies": set(),
+                "integrantes": [],
+                "uris": [],
                 "posicion": 0,
                 "listo": False
             }
 
-        for data in self.equipos.values():
-            if nombre in data["integrantes"]:
-                return False, f"{nombre} ya está registrado en un equipo."
+ 
+        # Si es el primer integrante, se acepta automáticamente
+        if len(self.equipos[equipo]["integrantes"]) == 0:
+            self.equipos[equipo]["integrantes"].append(nombre)
+            self.equipos[equipo]["uris"].append(uri_cliente)
+            with Pyro5.api.Proxy(uri_cliente) as cliente_proxy:
+                cliente_proxy.bienvenido_primero()
+            return
 
-        integrantes = list(self.equipos[equipo]["integrantes"])
-        proxies = list(self.equipos[equipo]["proxies"])
-
-        if len(integrantes) == 0:
-            self.equipos[equipo]["integrantes"].add(nombre)
-            self.equipos[equipo]["proxies"].add(cliente_proxy)
-            cliente_proxy.bienvenido_primero()
-            return True, f"{nombre} se ha unido directamente al equipo {equipo}."
-
+        # Si ya hay integrantes, se requiere votación
         votos = []
-        for proxy in proxies:
+        cliente_proxy.esperando_aprobacion()
+        for uri in self.equipos[equipo]["uris"]:
             try:
-                voto = proxy.aprobacion_integrante(nombre)
-                votos.append(voto)
-            except:
-                print(f"No se pudo contactar con un miembro del equipo {equipo} para la aprobación.")
+                with Pyro5.api.Proxy(uri) as cliente_proxy:
+                    voto = cliente_proxy.aprobacion_integrante(nombre)
+                    votos.append(voto)
+            except Exception as e:
+                print(f"No se pudo contactar con un miembro del equipo {equipo}: {e}")
                 return False, f"No se pudo contactar con todos los miembros del equipo {equipo} para la aprobación."
 
         if all(votos):
-            self.equipos[equipo]["integrantes"].add(nombre)
-            self.equipos[equipo]["proxies"].add(cliente_proxy)
-            cliente_proxy.esperando_aprobacion()
+            self.equipos[equipo]["integrantes"].append(nombre)
+            self.equipos[equipo]["uris"].append(uri_cliente)
+            with Pyro5.api.Proxy(uri_cliente) as cliente_proxy:
+                cliente_proxy.aprobacion_confirmada()
             return True, f"{nombre} fue aprobado por todos y se ha unido al equipo {equipo}."
         else:
+            with Pyro5.api.Proxy(uri_cliente) as cliente_proxy:
+                cliente_proxy.aprobacion_denegada()
             return False, f"{nombre} no fue aprobado por todos y no se ha unido al equipo {equipo}."
- 
-
+        
     def marcar_listo(self, equipo):
         if equipo in self.equipos and len(self.equipos[equipo]['integrantes']) >= 1:
             self.equipos[equipo]['listo'] = True

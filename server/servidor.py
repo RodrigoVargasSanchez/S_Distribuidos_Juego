@@ -3,7 +3,8 @@ from servicioJuego import ServicioJuego
 
 def main():
     daemon = Pyro5.api.Daemon()
-    uri = daemon.register(ServicioJuego)
+    juego = ServicioJuego()
+    uri = daemon.register(juego)
 
     ns = Pyro5.api.locate_ns()
     ns.register("juego.servicio", uri)
