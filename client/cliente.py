@@ -1,4 +1,6 @@
 import Pyro5.api
+import tkinter as tk
+from tkinter import messagebox
 
 @Pyro5.api.expose
 class Cliente:
@@ -19,6 +21,16 @@ class Cliente:
 
     def aprobacion_denegada(self):
         print(f"\n NO has sido aceptado en el equipo.")
+
+    def aprobar_inicio(self):
+        while True:
+            respuesta = input(f"\n¿Iniciar Juego? (S/N): ").strip().upper()
+            if respuesta == 'S':
+                return True
+            elif respuesta == 'N':
+                return False
+            else:
+                print("Entrada no válida. Por favor, ingresa 'S' para sí o 'N' para no.")
 
     def aprobacion_integrante(self, nombre):
         while True:
