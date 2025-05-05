@@ -1,74 +1,77 @@
+import Pyro5.api
 import tkinter as tk
 from tkinter import messagebox
 import threading
-import Pyro5.api
-from cliente import Cliente  # Asegúrate de tener esta clase definida
 
+from cliente import Cliente
+
+from componentes.ventana import Ventana
+from componentes.inicio import Inicio
+from componentes.ventanaModal import VentanaModal
+from componentes.modalEsperando import VentanaModalEsperando
+from componentes.esperandoListo import Listo
+
+# Inicializar cliente Pyro5
 cliente = Cliente()
 daemon = Pyro5.api.Daemon()
 uri_cliente = daemon.register(cliente)
-
 threading.Thread(target=daemon.requestLoop, daemon=True).start()
-
 ns = Pyro5.api.locate_ns()
-juego = Pyro5.api.Proxy(ns.lookup("juego.servicio")) 
+juego = Pyro5.api.Proxy(ns.lookup("juego.servicio"))
 
-# Función para manejar el registro
-def registrar():
-    nombre = entrada_nombre.get()
-    equipo = entrada_equipo.get()
+# Función para continuar después de ser aceptado
+def continuar(nombre, equipo):
+    print("Continuar fue presionado")
+    ventana.show_listo(nombre, equipo, marcar_listo)
 
+# Función para salir
+def desconectar():
+    juego.desconectar(uri_cliente, cliente.nombre_actual)
+    ventana.after(100, ventana.destroy)
+
+def salir():
+    ventana.after(100, ventana.destroy)
+    
+# Función para unirse a un equipo
+def unirse():
+    nombre, equipo = ventana.get_inicio_data()
     if not nombre or not equipo:
         messagebox.showerror("Error", "Debe ingresar nombre y equipo.")
         return
-
+    
     try:
-        respuesta = juego.registrar_integrante(nombre, equipo, str(uri_cliente))
-        messagebox.showinfo("Registro", f"{respuesta}")
-        if (respuesta == "Hay integrantes en el equipo. Esperando votación..."):
-            votacion = juego.votacion_equipo(nombre, equipo, str(uri_cliente))
-            if votacion == "Has sido aceptado por el equipo":
-                messagebox.showinfo("Aceptado", f"{votacion}")
-            elif votacion == "NO has sido aceptado por el equipo":
-                messagebox.showinfo("Aceptado", f"{votacion}")
-            else:
-                messagebox.showinfo("Aceptado", f"{votacion}") #No se pudo conectar con un integrante del equipo
+        estado, mensaje = juego.registrar_integrante(nombre, equipo, str(uri_cliente))
+        
+        # Guardar los datos del usuario en el cliente para usarlos en callbacks
+        cliente.nombre_actual = nombre
+        cliente.equipo_actual = equipo
+        cliente.uri = uri_cliente
+        
+        if estado == 1:
+            VentanaModalEsperando(ventana, "Votación", nombre, equipo, uri_cliente)
 
+        elif (estado == 2):
+            # Error - Mostrar ventana de advertencia
+            VentanaModal(ventana, "¡Advertencia!", f"{mensaje}", botones=[("Salir", salir)])
+        else:
+            # Éxito inmediato - Mostrar ventana de éxito
+            VentanaModal(ventana, "¡Genial!", f"{mensaje}", botones = [("Continuar", lambda: continuar(nombre, equipo))])
     except Exception as e:
-        messagebox.showerror("Error", f"No se pudo registrar: {e}")
+        messagebox.showerror("Error", f"No se pudo unir a la partida: {e}")
+
 
 # Función para marcar listo
 def marcar_listo():
-    equipo = entrada_equipo.get()
-    try:
-        exito, mensaje = juego.marcar_listo(equipo)
-        if exito:
-            messagebox.showinfo("Listo", mensaje)
-        else:
-            messagebox.showwarning("No Listo", mensaje)
-    except Exception as e:
-        messagebox.showerror("Error", f"No se pudo marcar como listo: {e}")
+    cliente.listo = True
+    estado, mensaje = juego.marcar_listo(cliente.equipo_actual)
+
 
 # Iniciar interfaz
-ventana = tk.Tk()
-ventana.title("Cliente del Juego")
+ventana = Ventana(on_close_callback=desconectar)
+ventana.show_inicio(unirse)
 
-tk.Label(ventana, text="Nombre").grid(row=0, column=0, padx=10, pady=5)
-entrada_nombre = tk.Entry(ventana)
-entrada_nombre.grid(row=0, column=1)
+# Configurar referencias en el cliente
+cliente.configurar_referencias(ventana, VentanaModal, continuar, desconectar)
 
-tk.Label(ventana, text="Equipo").grid(row=1, column=0, padx=10, pady=5)
-entrada_equipo = tk.Entry(ventana)
-entrada_equipo.grid(row=1, column=1)
-
-tk.Button(ventana, text="Solicitar Ingreso", command=registrar).grid(row=2, column=0, pady=10)
-
-# Hilo separado para el daemon
-import threading
-def iniciar_pyro():
-    print(f"Cliente expuesto en: {uri_cliente}")
-    daemon.requestLoop()
-
-threading.Thread(target=iniciar_pyro, daemon=True).start()
-
+# Iniciar la interfaz de usuario
 ventana.mainloop()
