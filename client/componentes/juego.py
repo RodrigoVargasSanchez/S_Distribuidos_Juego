@@ -7,7 +7,7 @@ class Juego:
         self.frame = tk.Frame(parent_container)
         self.frame.grid(row=1, column=1, sticky="nsew")
 
-        diccionario_equipos, meta_pts = self.obtener_datos()
+        _, meta_pts = self.obtener_datos()
 
         # Etiquetas informativas
         tk.Label(self.frame, text=f"Meta de puntos: {meta_pts}", font=("Arial", 16, "bold")).grid(row=0, column=0, pady=5, columnspan=2)
@@ -34,25 +34,19 @@ class Juego:
         self.resultado_label = tk.Label(self.frame, text="Presione para lanzar", font=("Arial", 14))
         self.resultado_label.grid(row=4, column=0, columnspan=2, pady=10)
 
-        self.boton_lanzar = tk.Button(self.frame, text="Lanzar Dado", font=("Arial", 14), command=self.lanzar_dado)
+        self.boton_lanzar = tk.Button(self.frame, text="Lanzar Dado", font=("Arial", 14), command=self.lanzar_dado_cliente)
         self.boton_lanzar.grid(row=5, column=0, columnspan=2, pady=10)
 
-        self.actualizar_tabla(diccionario_equipos)
-
-    def actualizar_tabla(self, diccionario_equipos=None):
-        if not diccionario_equipos:
-            diccionario_equipos, _ = self.obtener_datos()
-
+    def actualizar_tabla(self, diccionario_equipos):
         for fila in self.tabla.get_children():
             self.tabla.delete(fila)
 
         for equipo_id, datos in diccionario_equipos.items():
             self.tabla.insert("", "end", values=(equipo_id, datos["posicion"]))
 
-    def lanzar_dado(self):
+    def lanzar_dado_cliente(self):
         resultado_dado, nueva_posicion, ganador = self.lanzar()
         self.resultado_label.config(text=f"Resultado: {resultado_dado}, Posición: {nueva_posicion}")
-        self.actualizar_tabla()
 
         if ganador:
             messagebox.showinfo("¡Ganador!", "¡Tu equipo ha ganado!")
@@ -71,7 +65,7 @@ class Juego:
         try:
             ns = Pyro5.api.locate_ns()
             juego = Pyro5.api.Proxy(ns.lookup("juego.servicio"))
-            resultado_dado, nueva_posicion, ganador = juego.lanzar_dado(
+            resultado_dado, nueva_posicion, ganador = juego.lanzar_dado_servidor(
                 self.nombre, self.equipo, self.uri_cliente
             )
             return resultado_dado, nueva_posicion, ganador

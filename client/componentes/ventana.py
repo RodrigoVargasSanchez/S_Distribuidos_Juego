@@ -53,6 +53,10 @@ class Ventana(tk.Tk):
         self.juego_component = Juego(self.content_frame, nombre, equipo, uri_cliente)
         self._current_component_frame = self.juego_component.frame
 
+    def actualizar_tabla_juego(self, diccionario_equipos):
+        if hasattr(self, 'juego_component') and self.juego_component:
+            self.juego_component.actualizar_tabla(diccionario_equipos)
+
     def get_inicio_data(self):
         if hasattr(self, 'inicio_component') and self._current_component_frame == self.inicio_component.get_frame():
             return self.inicio_component.get_datos()

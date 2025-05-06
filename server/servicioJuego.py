@@ -161,7 +161,7 @@ class ServicioJuego:
     
     
     #Necesaria para ventana
-    def lanzar_dado(self, nombre, equipo, uri_cliente):
+    def lanzar_dado_servidor(self, nombre, equipo, uri_cliente):
         numero = random.randint(self.dado_min, self.dado_max)
 
         if equipo in self.equipos and nombre in self.equipos[equipo]["integrantes"]:
@@ -175,7 +175,28 @@ class ServicioJuego:
 
             self.equipos[equipo]["posicion"] = nueva_posicion
 
+            self.actualizar_tableros_clientes()
+
             return numero, nueva_posicion, ganador
         else:
             print(f"No se encontró el equipo {equipo} o el jugador {nombre} no pertenece a ese equipo.")
             return None, None
+        
+    def actualizar_tableros_clientes(self):
+        hilos = []
+
+        for equipo_id, datos_equipo in self.equipos.items():
+            for uri in datos_equipo["uris"]:
+                def actualizar_tableros(uri_actual, equipo_actual):
+                    try:
+                        with Pyro5.api.Proxy(uri_actual) as cliente_proxy:
+                            cliente_proxy.actualizar_tabla(self.equipos)
+                    except Exception as e:
+                        print(f"No se pudo actualizar la tabla al miembro con uri {uri_actual} del equipo {equipo_actual}: {e}")
+
+                # Lanzar hilo para cada cliente
+                hilo = threading.Thread(target=actualizar_tableros, args=(uri, equipo_id))
+                hilo.start()
+                hilos.append(hilo)
+
+        return True, "Tablas actualizadas en paralelo"

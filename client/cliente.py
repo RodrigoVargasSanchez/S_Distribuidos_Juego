@@ -155,3 +155,13 @@ class Cliente:
         # Ejecutar en el hilo principal
         if self.ventana:
             self.ventana.after(0, actualizar_ui)
+
+    def actualizar_tabla(self, diccionario_equipos):
+        """Método remoto llamado por el servidor para actualizar la tabla del juego"""
+        
+        def actualizar_ui():
+            if hasattr(self, 'ventana') and self.ventana:
+                self.ventana.actualizar_tabla_juego(diccionario_equipos)
+
+        if self.ventana:
+            self.ventana.after(0, actualizar_ui)
