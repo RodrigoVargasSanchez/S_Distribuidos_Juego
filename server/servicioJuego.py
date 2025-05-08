@@ -8,6 +8,10 @@ class ServicioJuego:
         self.max_posiciones = max_posiciones
         self.dado_min = dado_min
         self.dado_max = dado_max
+        self.turno_actual = 0
+        self.orden_equipos = []
+        self.jugador_turno_actual = None # Nuevo atributo
+        self.equipo_turno_actual = None  # Nuevo
 
         self.equipos = {
             "1": {
@@ -132,11 +136,20 @@ class ServicioJuego:
 
 
     def iniciar_juego(self):
+        self.orden_equipos = list(self.equipos.keys())
+        random.shuffle(self.orden_equipos)
+        self.turno_actual = 0
+        self.juego_iniciado = True
+        self.indice_jugador_actual = {} # Nuevo diccionario para rastrear el jugador actual por equipo
+        for equipo_id in self.orden_equipos:
+            self.indice_jugador_actual[equipo_id] = 0 # Inicializar el índice del primer jugador de cada equipo
+
         hilos = []
 
         for equipo_id, datos_equipo in self.equipos.items():
             for uri in datos_equipo["uris"]:
-                def lanzar_juego(uri_actual, equipo_actual):
+                # Aquí se "congelan" los valores usando argumentos por defecto
+                def lanzar_juego(uri_actual=uri, equipo_actual=equipo_id):
                     try:
                         with Pyro5.api.Proxy(uri_actual) as cliente_proxy:
                             cliente_proxy.iniciar_juego()
@@ -144,17 +157,23 @@ class ServicioJuego:
                     except Exception as e:
                         print(f"No se pudo iniciar el juego para el miembro con uri {uri_actual} del equipo {equipo_actual}: {e}")
 
-                # Lanzar hilo para cada cliente
-                hilo = threading.Thread(target=lanzar_juego, args=(uri, equipo_id))
+                hilo = threading.Thread(target=lanzar_juego)
                 hilo.start()
                 hilos.append(hilo)
 
-        # (Opcional) Esperar a que todos terminen, si quieres bloquear hasta que finalicen
-        # for hilo in hilos:
-        #     hilo.join()
+        print("Juego iniciado. El orden de los equipos es:", self.orden_equipos)
 
-        return True, "Juegos iniciados en paralelo"
+        equipo_inicial = self.orden_equipos[0]
+        # Notificar al primer jugador del primer equipo que es su turno
+        primer_jugador_uri = self.equipos[equipo_inicial]["uris"][self.indice_jugador_actual[equipo_inicial]]
+        try:
+            with Pyro5.api.Proxy(primer_jugador_uri) as cliente_proxy:
+                cliente_proxy.es_tu_turno()
+        except Exception as e:
+            print(f"Error al notificar inicio de turno al cliente {primer_jugador_uri} del equipo {equipo_inicial}: {e}")
 
+        return True, f"Juego iniciado. El orden de los equipos es: {self.orden_equipos}. Comienza el equipo {self.orden_equipos[0]}, jugador {self.equipos[self.orden_equipos[0]]['integrantes'][0]}"
+   
     #Necesaria para ventena    
     def obtener_datos_juego(self):  
         return self.equipos, self.max_posiciones
@@ -162,26 +181,57 @@ class ServicioJuego:
     
     #Necesaria para ventana
     def lanzar_dado_servidor(self, nombre, equipo, uri_cliente):
+        if not self.juego_iniciado:
+            return None, None, False, "El juego aún no ha comenzado."
+
+        if self.orden_equipos[self.turno_actual] != equipo:
+            return None, None, False, f"No es el turno del equipo {equipo}. Es el turno del equipo {self.orden_equipos[self.turno_actual]}."
+
+        # Obtener el índice del jugador actual del equipo
+        indice_actual_jugador = self.indice_jugador_actual.get(equipo, 0)
+
+        # Verificar si el jugador que intenta lanzar es el jugador actual del equipo
+        if equipo in self.equipos and self.equipos[equipo]["integrantes"] and nombre != self.equipos[equipo]["integrantes"][indice_actual_jugador]:
+            jugador_actual = self.equipos[equipo]["integrantes"][indice_actual_jugador]
+            return None, None, False, f"No es el turno de {nombre}. Es el turno de {jugador_actual} del equipo {equipo}."
+
         numero = random.randint(self.dado_min, self.dado_max)
 
         if equipo in self.equipos and nombre in self.equipos[equipo]["integrantes"]:
             nueva_posicion = self.equipos[equipo]["posicion"] + numero
 
-            if nueva_posicion > self.max_posiciones:
+            if nueva_posicion >= self.max_posiciones:
                 nueva_posicion = self.max_posiciones
                 ganador = True
             else:
                 ganador = False
 
             self.equipos[equipo]["posicion"] = nueva_posicion
-
             self.actualizar_tableros_clientes()
 
-            return numero, nueva_posicion, ganador
+            # Pasar al siguiente jugador del equipo
+            self.indice_jugador_actual[equipo] = (self.indice_jugador_actual[equipo] + 1) % len(self.equipos[equipo]["integrantes"])
+
+            # Pasar al siguiente equipo después de que un jugador haya lanzado
+            self.turno_actual = (self.turno_actual + 1) % len(self.orden_equipos)
+
+            siguiente_equipo = self.orden_equipos[self.turno_actual]
+            indice_siguiente_jugador = self.indice_jugador_actual[siguiente_equipo]
+            nombre_siguiente_jugador = self.equipos[siguiente_equipo]["integrantes"][indice_siguiente_jugador]
+            uri_siguiente_jugador = self.equipos[siguiente_equipo]["uris"][indice_siguiente_jugador]
+
+            # Notificar al siguiente jugador que es su turno
+            try:
+                with Pyro5.api.Proxy(uri_siguiente_jugador) as cliente_proxy:
+                    cliente_proxy.es_tu_turno() # <--- Enviar notificación de turno
+            except Exception as e:
+                print(f"Error al notificar turno al cliente {uri_siguiente_jugador} del equipo {siguiente_equipo}, jugador {nombre_siguiente_jugador}: {e}")
+
+            return numero, nueva_posicion, ganador, None
         else:
             print(f"No se encontró el equipo {equipo} o el jugador {nombre} no pertenece a ese equipo.")
-            return None, None
-        
+            return None, None, False, "Error: Equipo o jugador no encontrado."
+                        
     def actualizar_tableros_clientes(self):
         hilos = []
 
