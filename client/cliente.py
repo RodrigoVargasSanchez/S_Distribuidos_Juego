@@ -1,7 +1,8 @@
 import Pyro5.api
 import tkinter as tk
-from tkinter import messagebox
-import threading
+import logging
+from datetime import datetime
+from clienteRMI import ClienteRMI
 
 @Pyro5.api.expose
 class Cliente:
@@ -12,10 +13,37 @@ class Cliente:
         self.VentanaModal = None
         self.callback_continuar = None
         self.callback_salir = None
+
         self.nombre_actual = None
         self.equipo_actual = None
         self.uri = None
         self.listo = False
+        self.juego_id = None
+
+    def configurar_logger(self):
+        if self.nombre_actual is None or self.juego_id is None or self.equipo_actual is None:
+            raise ValueError("Faltan datos para configurar el logger")
+
+        self.logger = logging.getLogger(f"juego{str(self.juego_id)}{self.nombre_actual}")
+        self.logger.setLevel(logging.INFO)
+
+        fh = logging.FileHandler(f'logs/{self.nombre_actual}.log')
+        fh.setFormatter(logging.Formatter('%(message)s'))
+
+        # Evita agregar múltiples handlers si se vuelve a llamar
+        if not self.logger.handlers:
+            self.logger.addHandler(fh)
+
+    def log(self, estado, accion, valor=None):
+        timestamp = datetime.now().isoformat()
+        componentes = [timestamp, estado, f"juego{str(self.juego_id)}", accion, f"equipo{str(self.equipo_actual)}", self.nombre_actual]
+
+        if valor is not None:
+            componentes.append(str(valor))
+
+        mensaje = ", ".join(componentes)
+        self.logger.info(mensaje)
+
     
     def get_Listo(self):
         return self.listo
@@ -183,3 +211,8 @@ class Cliente:
                 
         if self.ventana:
             self.ventana.after(0, actualizar_ui)
+
+    def centralizar_logs(self):
+        cliente_rmi = ClienteRMI(f"{self.nombre_actual}.log")
+        cliente_rmi.enviar_log()
+        print("se envió el log")

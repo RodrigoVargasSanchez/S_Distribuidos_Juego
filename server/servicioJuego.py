@@ -14,6 +14,8 @@ class ServicioJuego:
         self.orden_equipos = []
         self.turno_equipo_actual = None
 
+        self.juego_id = 1
+
         self.equipos = {
             "1": {
                 "integrantes": [],
@@ -38,6 +40,7 @@ class ServicioJuego:
 
         cliente_proxy = Pyro5.api.Proxy(uri_cliente)
 
+        cliente_proxy.log("ini", "crea-jugador")
         # Verificar si el nombre ya existe en cualquier equipo
         for data in self.equipos.values():
             if nombre in data["integrantes"]:
@@ -67,7 +70,9 @@ class ServicioJuego:
             self.equipos[equipo]["uris"].append(uri_cliente)
             with Pyro5.api.Proxy(uri_cliente) as cliente_proxy:
                 cliente_proxy.bienvenido_primero()
+            cliente_proxy.log("fin", "crea-jugador")
             return 0, f"¡Bienvenido! eres el primer integrante del equipo {equipo}"
+            
 
         # Si hay otros integrantes, se requiere votación
         return 1, f"Hay integrantes en el equipo {equipo}. Esperando votación..."
@@ -91,6 +96,7 @@ class ServicioJuego:
             self.equipos[equipo]["uris"].append(uri_cliente)
             with Pyro5.api.Proxy(uri_cliente) as cliente_proxy:
                 cliente_proxy.aprobacion_confirmada(self.juego_iniciado)
+                cliente_proxy.log("ini", "crea-jugador")
                 print(f"[✓] {nombre} fue aprobado y se unió al equipo {equipo}")
             return True, f"{nombre} fue aprobado por todos y se ha unido al equipo {equipo}."
         else:
@@ -172,6 +178,7 @@ class ServicioJuego:
                 def lanzar_juego(uri_actual=uri, equipo_actual=equipo_id):
                     try:
                         with Pyro5.api.Proxy(uri_actual) as cliente_proxy:
+                            cliente_proxy.log("ini", "inicio-juego")
                             cliente_proxy.iniciar_juego()
                             print(f"Se inició el juego al integrante con uri {uri_actual} del equipo {equipo_actual}")
                     except Exception as e:
@@ -187,6 +194,8 @@ class ServicioJuego:
         titulo = "¡El juego ha comenzado!"
         mensaje = f"El orden de los equipos es: {self.orden_equipos}. Comienza el equipo {self.orden_equipos[self.turno_equipo_actual]}."
         self.jugar(titulo, mensaje)
+
+        self.juego_id += 1
 
     def jugar(self, titulo, mensaje):
         if not self.juego_iniciado:
@@ -216,10 +225,13 @@ class ServicioJuego:
             hilo.start()
             hilos.append(hilo)
 
-    def lanzar(self, equipo, uri):
-        puntaje = random.randint(int(self.dado_min), int(self.dado_max))
+    def lanzar(self, equipo, uri, puntaje):        
+    
         recibidos = self.equipos[equipo]["recibidos"]
         recibidos[uri] = puntaje
+
+        with Pyro5.api.Proxy(uri) as cliente_proxy:
+            cliente_proxy.log("fin", "lanza-dado", valor = puntaje)
 
         # Verificar si todos los jugadores ya lanzaron
         if len(recibidos) == len(self.equipos[equipo]["uris"]):
@@ -230,6 +242,8 @@ class ServicioJuego:
 
             # Finalizar turno (continúa el juego)
             self.finalizar_turno(equipo, puntos_avance)
+
+
 
     def finalizar_turno(self, equipo, puntos_avance):
         # Actualizar posición
@@ -244,10 +258,12 @@ class ServicioJuego:
                     # Aquí se "congelan" los valores usando argumentos por defecto
                     def lanzar_victoria(uri_actual=uri, equipo_actual=equipo_id):
                         try:
-                            with Pyro5.api.Proxy(uri_actual) as cliente_proxy:
-                                cliente_proxy.lanzar_victoria(equipo)
+                                with Pyro5.api.Proxy(uri_actual) as cliente_proxy:
+                                    cliente_proxy.log("fin", "inicio-juego")
+                                    cliente_proxy.lanzar_victoria(equipo)
+                                    cliente_proxy.centralizar_logs()
                         except Exception as e:
-                            print(f"No se pudo mostrar ganadorar para jugador con {uri_actual} del equipo {equipo_actual}: {e}")
+                            print(f"No se pudo mostrar ganador para jugador con {uri_actual} del equipo {equipo_actual}: {e}")
 
                     hilo = threading.Thread(target=lanzar_victoria)
                     hilo.start()
@@ -286,10 +302,13 @@ class ServicioJuego:
     
     #Necesaria para ventena    
     def obtener_datos_juego(self):  
-        return self.equipos, self.num_posiciones
+        return self.equipos, self.num_posiciones, self.dado_min, self.dado_max
     
     def get_equipo_jugando(self):
         return self.orden_equipos[self.turno_equipo_actual]
+    
+    def get_juego_id(self):
+        return self.juego_id
     
     def get_num_equipos(self):
         if self.juego_iniciado:

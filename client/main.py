@@ -48,12 +48,14 @@ def unirse():
         return
     
     try:
-        estado, mensaje = juego.registrar_integrante(nombre, equipo, str(uri_cliente))
-        
-        # Guardar los datos del usuario en el cliente para usarlos en callbacks
         cliente.nombre_actual = nombre
         cliente.equipo_actual = equipo
         cliente.uri = uri_cliente
+        cliente.juego_id = juego.get_juego_id()
+        cliente.configurar_logger()
+
+        estado, mensaje = juego.registrar_integrante(nombre, equipo, str(uri_cliente))
+        
         
         if estado == 1:
             VentanaModalEsperando(ventana, "Votación", nombre, equipo, uri_cliente)

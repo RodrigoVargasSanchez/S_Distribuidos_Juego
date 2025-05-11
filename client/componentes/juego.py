@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import Pyro5.api
+import random
 
 class Juego:
     def __init__(self, parent_container, nombre, equipo, uri_cliente):
@@ -11,7 +12,10 @@ class Juego:
         self.frame = tk.Frame(parent_container)
         self.frame.grid(row=1, column=1, sticky="")
 
-        _, meta_pts = self.obtener_datos()
+        _, meta_pts, dado_min, dado_max = self.obtener_datos()
+
+        self.dado_min = dado_min
+        self.dado_max = dado_max
 
         # Etiquetas informativas
         tk.Label(self.frame, text=f"Meta de puntos: {meta_pts}", font=("Arial", 16, "bold")).grid(row=0, column=0, pady=5, columnspan=2)
@@ -76,10 +80,15 @@ class Juego:
     def lanzar_dado(self):
         self.boton_lanzar.config(state="disabled")
 
+        puntaje = random.randint(int(self.dado_min), int(self.dado_max))
+
+        with Pyro5.api.Proxy(self.uri_cliente) as cliente_proxy:
+            cliente_proxy.log("ini", "lanza-dado", valor = puntaje)
+
         try:
             ns = Pyro5.api.locate_ns()
             juego_servicio = Pyro5.api.Proxy(ns.lookup("juego.servicio"))
-            juego_servicio.lanzar(self.equipo, self.uri_cliente)
+            juego_servicio.lanzar(self.equipo, self.uri_cliente, puntaje)
 
         except Exception as e:
             print(f"Error al lanzar el dado: {e}")
@@ -89,8 +98,8 @@ class Juego:
         try:
             ns = Pyro5.api.locate_ns()
             juego = Pyro5.api.Proxy(ns.lookup("juego.servicio"))
-            diccionario_equipos, meta_pts = juego.obtener_datos_juego()
-            return diccionario_equipos, meta_pts
+            diccionario_equipos, meta_pts, dado_min, dado_max = juego.obtener_datos_juego()
+            return diccionario_equipos, meta_pts, dado_min, dado_max
             
         except Exception as e:
             print(f"Error durante la votación para {self.nombre}: {e}")
