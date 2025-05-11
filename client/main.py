@@ -20,9 +20,17 @@ ns = Pyro5.api.locate_ns()
 juego = Pyro5.api.Proxy(ns.lookup("juego.servicio"))
 
 # Función para continuar después de ser aceptado
-def continuar(nombre, equipo):
+def continuar(nombre, equipo, uri, jugando):
     print("Continuar fue presionado")
-    ventana.show_listo(nombre, equipo, marcar_listo)
+    if jugando:
+        ventana.show_juego(nombre, equipo, uri)
+        equipos, _ = juego.obtener_datos_juego()
+        cliente.actualizar_tabla(equipos, "Juego", "¡¡Te has unido a una partida en curso!!", equipo)
+        equipo_jugando = juego.get_equipo_jugando()
+        if equipo_jugando == equipo:
+            cliente.habilitar_lanzar()
+    else:
+        ventana.show_listo(nombre, equipo, marcar_listo)
 
 # Función para salir
 def desconectar():
@@ -53,9 +61,11 @@ def unirse():
         elif (estado == 2):
             # Error - Mostrar ventana de advertencia
             VentanaModal(ventana, "¡Advertencia!", f"{mensaje}", botones=[("Salir", salir)])
+        elif (estado == 3):
+            VentanaModal(ventana, "Ups...", f"{mensaje}", botones=[("Salir", salir)])
         else:
             # Éxito inmediato - Mostrar ventana de éxito
-            VentanaModal(ventana, "¡Genial!", f"{mensaje}", botones = [("Continuar", lambda: continuar(nombre, equipo))])
+            VentanaModal(ventana, "¡Genial!", f"{mensaje}", botones = [("Continuar", lambda: continuar(nombre, equipo, uri_cliente, False))])
     except Exception as e:
         messagebox.showerror("Error", f"No se pudo unir a la partida: {e}")
 
@@ -68,7 +78,9 @@ def marcar_listo():
 
 # Iniciar interfaz
 ventana = Ventana(on_close_callback=desconectar)
-ventana.show_inicio(unirse)
+num_equipos = juego.get_num_equipos()
+print(num_equipos)
+ventana.show_inicio(num_equipos, unirse)
 
 # Configurar referencias en el cliente
 cliente.configurar_referencias(ventana, VentanaModal, continuar, desconectar)

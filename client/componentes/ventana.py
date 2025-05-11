@@ -1,5 +1,4 @@
 import tkinter as tk
-import Pyro5.api
 
 from componentes.inicio import Inicio
 from componentes.esperandoListo import Listo
@@ -37,21 +36,11 @@ class Ventana(tk.Tk):
             self._current_component_frame.destroy()
             self._current_component_frame = None
 
-    def show_inicio(self, unirse_callback):
+    def show_inicio(self, num_equipos, unirse_callback):
         self._clear_content_frame()
         # Inicio ya usa grid internamente
-        self.inicio_component = Inicio(self.content_frame, unirse_callback)
+        self.inicio_component = Inicio(self.content_frame, num_equipos, unirse_callback)
         self._current_component_frame = self.inicio_component.get_frame()
-
-    def habilitar_boton_lanzar(self):
-        """Habilita el botón para lanzar el dado."""
-        if self.juego_component:
-            self.juego_component.habilitar_boton_lanzar()
-
-    def deshabilitar_boton_lanzar(self):
-        """Deshabilita el botón para lanzar el dado."""
-        if self.juego_component:
-            self.juego_component.deshabilitar_boton_lanzar()
 
     def show_listo(self, nombre, equipo, listo_callback):
         self._clear_content_frame()
@@ -62,15 +51,26 @@ class Ventana(tk.Tk):
     def show_juego(self, nombre, equipo, uri_cliente):
         self._clear_content_frame()
         self.juego_component = Juego(self.content_frame, nombre, equipo, uri_cliente) # <--- Pasar el callback
-        self._current_component_frame = self.juego_component.frame
+        self._current_component_frame = self.juego_component.get_frame
+
+    
+    def habilitar_lanzar(self):
+        """Habilita el botón para lanzar el dado."""
+        if self.juego_component:
+            resultado = self.juego_component.habilitar_lanzar()
+            return resultado
 
     # def actualizar_info_turno_juego(self, nombre_jugador, nombre_equipo):
     #     if hasattr(self, 'juego_component') and self.juego_component:
     #         self.juego_component.actualizar_info_turno(nombre_jugador, nombre_equipo)
+        # def deshabilitar_boton_lanzar(self):
+    #     """Deshabilita el botón para lanzar el dado."""
+    #     if self.juego_component:
+    #         self.juego_component.deshabilitar_boton_lanzar()
 
-    def actualizar_tabla_juego(self, diccionario_equipos):
+    def actualizar_tabla_juego(self, diccionario_equipos, titulo, mensaje, equipo):
         if hasattr(self, 'juego_component') and self.juego_component:
-            self.juego_component.actualizar_tabla(diccionario_equipos)
+            self.juego_component.actualizar_tabla(diccionario_equipos, titulo, mensaje, equipo)
 
     def get_inicio_data(self):
         if hasattr(self, 'inicio_component') and self._current_component_frame == self.inicio_component.get_frame():
