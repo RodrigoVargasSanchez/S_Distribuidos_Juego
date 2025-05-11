@@ -16,6 +16,7 @@ class Cliente:
         self.equipo_actual = None
         self.uri = None
         self.listo = False
+        self.es_mi_turno = False
     
     def get_Listo(self):
         return self.listo
@@ -27,6 +28,26 @@ class Cliente:
         self.callback_continuar = continuar
         self.callback_salir = salir
 
+    def es_tu_turno(self):
+        """Método remoto llamado por el servidor para indicar que es el turno del equipo."""
+        print("\n¡Es el turno de tu equipo!")
+        self.es_mi_turno = True
+        if self.ventana and hasattr(self.ventana, 'habilitar_boton_lanzar'):
+            self.ventana.habilitar_boton_lanzar()
+
+    def no_es_tu_turno(self):
+        """Método remoto llamado por el servidor para indicar que NO es el turno del equipo."""
+        print("\nNo es el turno de tu equipo. Espera...")
+        self.es_mi_turno = False
+        if self.ventana and hasattr(self.ventana, 'deshabilitar_boton_lanzar'):
+            self.ventana.deshabilitar_boton_lanzar()
+
+    def notificar_ganador(self, equipo_ganador):
+        """Método remoto llamado por el servidor para notificar al ganador."""
+        print(f"\n¡El equipo {equipo_ganador} ha ganado el juego!")
+        # Aquí podrías mostrar un mensaje en la interfaz gráfica
+        if self.ventana and hasattr(self.ventana, 'mostrar_ganador'):
+            self.ventana.mostrar_ganador(equipo_ganador)
         
     def solicitud(self, apodo):
         """Notifica que un usuario ha solicitado unirse al equipo"""
@@ -135,6 +156,7 @@ class Cliente:
     def iniciar_juego(self):
         """Método remoto llamado por el servidor para iniciar el juego"""
         print(f"\n ¡Has sido aceptado! Iniciando juego...")
+        self.es_mi_turno = False
 
         def actualizar_ui():
             # Cerrar ventana modal si sigue activa
@@ -151,6 +173,7 @@ class Cliente:
                     self.equipo_actual,
                     self.uri,
                 )
+                self.ventana.deshabilitar_boton_lanzar()
 
         # Ejecutar en el hilo principal
         if self.ventana:

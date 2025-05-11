@@ -30,6 +30,7 @@ class Ventana(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self._current_component_frame = None
+        self.juego_component = None # Para almacenar la instancia de Juego
 
     def _clear_content_frame(self):
         if self._current_component_frame:
@@ -42,6 +43,16 @@ class Ventana(tk.Tk):
         self.inicio_component = Inicio(self.content_frame, unirse_callback)
         self._current_component_frame = self.inicio_component.get_frame()
 
+    def habilitar_boton_lanzar(self):
+        """Habilita el botón para lanzar el dado."""
+        if self.juego_component:
+            self.juego_component.habilitar_boton_lanzar()
+
+    def deshabilitar_boton_lanzar(self):
+        """Deshabilita el botón para lanzar el dado."""
+        if self.juego_component:
+            self.juego_component.deshabilitar_boton_lanzar()
+
     def show_listo(self, nombre, equipo, listo_callback):
         self._clear_content_frame()
         # Listo ahora también usará grid internamente
@@ -50,8 +61,12 @@ class Ventana(tk.Tk):
 
     def show_juego(self, nombre, equipo, uri_cliente):
         self._clear_content_frame()
-        self.juego_component = Juego(self.content_frame, nombre, equipo, uri_cliente)
+        self.juego_component = Juego(self.content_frame, nombre, equipo, uri_cliente) # <--- Pasar el callback
         self._current_component_frame = self.juego_component.frame
+
+    # def actualizar_info_turno_juego(self, nombre_jugador, nombre_equipo):
+    #     if hasattr(self, 'juego_component') and self.juego_component:
+    #         self.juego_component.actualizar_info_turno(nombre_jugador, nombre_equipo)
 
     def actualizar_tabla_juego(self, diccionario_equipos):
         if hasattr(self, 'juego_component') and self.juego_component:
@@ -61,7 +76,7 @@ class Ventana(tk.Tk):
         if hasattr(self, 'inicio_component') and self._current_component_frame == self.inicio_component.get_frame():
             return self.inicio_component.get_datos()
         return None, None
-    
+
     def on_close(self):
         if self.on_close_callback:
             try:
