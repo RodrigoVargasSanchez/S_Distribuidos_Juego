@@ -94,12 +94,12 @@ Define cuántos jugadores componen cada equipo.
 ```
 Cantidad de equipos que pueden participar en la partida.
 
-Archivos y logs
+Archivos y logs: 
+
 ```bash
     PATH_LOGS = '../stats/logs_centralizados.log'
-    Ruta donde se guardan los logs centralizados del juego.
 ```
-Esta ruta es relativa al directorio desde donde se ejecuta el servidor.
+Ruta donde se guardan los logs centralizados del juego. Esta ruta es relativa al directorio desde donde se ejecuta el servidor.
 
 ***Todas estas variables son modificables por el usuario a gusto.***
 
