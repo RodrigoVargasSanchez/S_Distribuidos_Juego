@@ -1,5 +1,6 @@
 import tkinter as tk
 from PIL import Image, ImageTk
+import os
 
 # Crear la ventana principal
 ventana = tk.Tk()
@@ -16,14 +17,19 @@ def redimensionar_imagen(imagen_path, width, height):
     imagen_redimensionada = imagen.resize((width, height), Image.Resampling.LANCZOS)
     return ImageTk.PhotoImage(imagen_redimensionada)
 
+
+# Obtener la ruta del directorio actual donde se ejecuta el script
+directorio_actual = os.path.dirname(__file__)
+
 # Cargar las imágenes y redimensionarlas a un tamaño mayor
 imagenes = [
-    redimensionar_imagen("graficos/cantidad_equipos_partida.png", 680, 450),
-    redimensionar_imagen("graficos/cantidad_jugadores_partida.png", 680, 450),
-    redimensionar_imagen("graficos/curvas_puntuacion_acumulada.png", 680, 450),
-    redimensionar_imagen("graficos/jugadas_por_jugador.png", 680, 450),
-    redimensionar_imagen("graficos/jugadores_creados_por_equipo.png", 680, 450),
+    redimensionar_imagen(os.path.join(directorio_actual, "graficos/cantidad_equipos_partida.png"), 680, 450),
+    redimensionar_imagen(os.path.join(directorio_actual, "graficos/cantidad_jugadores_partida.png"), 680, 450),
+    redimensionar_imagen(os.path.join(directorio_actual, "graficos/curvas_puntuacion_acumulada.png"), 680, 450),
+    redimensionar_imagen(os.path.join(directorio_actual, "graficos/jugadas_por_jugador.png"), 680, 450),
+    redimensionar_imagen(os.path.join(directorio_actual, "graficos/jugadores_creados_por_equipo.png"), 680, 450),
 ]
+
 
 # Crear una etiqueta para mostrar las imágenes
 label_imagen = tk.Label(ventana, image=imagenes[0])

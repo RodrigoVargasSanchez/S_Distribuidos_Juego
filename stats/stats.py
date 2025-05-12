@@ -2,16 +2,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-# Crear la carpeta 'graficos' si no existe
-if not os.path.exists('graficos'):
-    os.makedirs('graficos')
+grafico_dir = os.path.join(os.path.dirname(__file__), 'graficos')
 
-# Guardar el nombre del archivo en una variable
-nombre_archivo = "logs_centralizados.log"
+# Crear la carpeta 'graficos' si no existe
+if not os.path.exists(grafico_dir):
+    os.makedirs(grafico_dir)
+
+# Ruta del archivo en la misma carpeta que el script
+nombre_archivo = os.path.join(os.path.dirname(__file__), "logs_centralizados.log")
 
 # Leer el archivo CSV
 df = pd.read_csv(nombre_archivo, sep=',')
-
 
 df = df.sort_values(by='timestamp', ascending=True)
 
@@ -41,7 +42,7 @@ plt.xticks(rotation=45)
 plt.tight_layout()
 
 # Guardar el gráfico como imagen
-plt.savefig('graficos/jugadores_creados_por_equipo.png')  # Guardar en la carpeta 'graficos'
+plt.savefig(os.path.join(grafico_dir, 'jugadores_creados_por_equipo.png'))  # Guardar en la carpeta 'graficos'
 plt.close()
 
 # ----------------------------------
@@ -73,7 +74,7 @@ plt.legend(title="Equipo")
 plt.tight_layout()
 
 # Guardar el gráfico como imagen
-plt.savefig('graficos/jugadas_por_jugador.png')  # Guardar en la carpeta 'graficos'
+plt.savefig(os.path.join(grafico_dir, 'jugadas_por_jugador.png'))  # Guardar en la carpeta 'graficos'
 plt.close()
 
 # ----------------------------------
@@ -118,7 +119,7 @@ plt.title('Curvas de Puntuación por Equipo a Través del Tiempo')
 plt.legend(title='Equipo')
 
 # Guardar el gráfico como imagen
-plt.savefig('graficos/curvas_puntuacion_acumulada.png')  # Guardar en la carpeta 'graficos'
+plt.savefig(os.path.join(grafico_dir, 'curvas_puntuacion_acumulada.png'))  # Guardar en la carpeta 'graficos'
 plt.close()
 
 # ----------------------------------
@@ -165,7 +166,7 @@ plt.title('Cantidad de Jugadores en la Partida a lo Largo del Tiempo')
 plt.grid(True)
 
 # Guardar el gráfico como imagen
-plt.savefig('graficos/cantidad_jugadores_partida.png')  # Guardar en la carpeta 'graficos'
+plt.savefig(os.path.join(grafico_dir, 'cantidad_jugadores_partida.png'))  # Guardar en la carpeta 'graficos'
 plt.close()
 
 # ----------------------------------
@@ -196,5 +197,5 @@ plt.title('Cantidad de Equipos en la Partida a lo Largo del Tiempo')
 plt.grid(True)
 
 # Guardar el gráfico como imagen
-plt.savefig('graficos/cantidad_equipos_partida.png')  # Guardar en la carpeta 'graficos'
+plt.savefig(os.path.join(grafico_dir, 'cantidad_equipos_partida.png'))  # Guardar en la carpeta 'graficos'
 plt.close()
