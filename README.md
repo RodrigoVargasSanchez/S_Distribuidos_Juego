@@ -73,31 +73,31 @@ DADO_MIN = 1
 Es el valor mínimo que se puede obtener cuando un jugador lanza el dado. En este caso, representa el número más bajo posible: 1.
 
 ```bash
-    DADO_MAX = 6
+DADO_MAX = 6
 ```
 Representa el valor máximo que se puede obtener al lanzar el dado.
 
 ### Configuración del tablero
 ```bash
-    NUM_POSICIONES = 100
+NUM_POSICIONES = 100
 ```
 Indica cuántas posiciones hay en el tablero. Un equipo gana la partida si alguno de sus jugadores alcanza (o supera) esta cantidad de casillas.
 
 ### Configuración de los jugadores
 ```bash
-    NUM_JUGADORES = 3
+NUM_JUGADORES = 3
 ```
 Define cuántos jugadores componen cada equipo.
 
 ```bash
-    NUM_EQUIPOS = 7
+NUM_EQUIPOS = 7
 ```
 Cantidad de equipos que pueden participar en la partida.
 
 Archivos y logs: 
 
 ```bash
-    PATH_LOGS = '../stats/logs_centralizados.log'
+PATH_LOGS = '../stats/logs_centralizados.log'
 ```
 Ruta donde se guardan los logs centralizados del juego. Esta ruta es relativa al directorio desde donde se ejecuta el servidor.
 
