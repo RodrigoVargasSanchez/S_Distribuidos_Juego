@@ -1,4 +1,8 @@
-2025-05-11T16:42:47.094796, ini, juego1, crea-jugador, equipo2, das
-2025-05-11T16:42:47.096245, fin, juego1, crea-jugador, equipo2, das
-2025-05-11T16:42:48.256046, ini, juego1, inicio-juego, equipo2, das
-2025-05-11T16:42:50.137973, fin, juego1, inicio-juego, equipo2, das
+2025-05-11T20:45:48.401937,ini,juego1,crea-jugador,equipo2,das
+2025-05-11T20:45:48.404964,fin,juego1,crea-jugador,equipo2,das
+2025-05-11T20:45:50.259789,ini,juego1,inicio-juego,equipo2,das
+2025-05-11T20:45:51.824733,ini,juego1,lanza-dado,equipo2,das,2
+2025-05-11T20:45:51.830418,fin,juego1,lanza-dado,equipo2,das,2
+2025-05-11T20:45:55.503393,ini,juego1,lanza-dado,equipo2,das,3
+2025-05-11T20:45:55.508817,fin,juego1,lanza-dado,equipo2,das,3
+2025-05-11T20:45:55.511023,fin,juego1,inicio-juego,equipo2,das

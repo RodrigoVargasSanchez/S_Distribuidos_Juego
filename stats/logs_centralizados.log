@@ -1,0 +1,11 @@
+timestamp,tipo_evento,juego_id,accion,equipo,jugador,resultado
+2025-05-11T20:43:29.971331,ini,juego1,crea-jugador,equipo1,asd
+2025-05-11T20:43:29.974452,fin,juego1,crea-jugador,equipo1,asd
+2025-05-11T20:43:33.833829,ini,juego1,inicio-juego,equipo1,asd
+2025-05-11T20:43:35.373384,ini,juego1,lanza-dado,equipo1,asd,5
+2025-05-11T20:43:35.378019,fin,juego1,lanza-dado,equipo1,asd,5
+2025-05-11T20:43:35.380265,fin,juego1,inicio-juego,equipo1,asd
+2025-05-11T20:43:32.783381,ini,juego1,crea-jugador,equipo2,das
+2025-05-11T20:43:32.786523,fin,juego1,crea-jugador,equipo2,das
+2025-05-11T20:43:33.834459,ini,juego1,inicio-juego,equipo2,das
+2025-05-11T20:43:35.380682,fin,juego1,inicio-juego,equipo2,das

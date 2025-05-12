@@ -24,7 +24,7 @@ def continuar(nombre, equipo, uri, jugando):
     print("Continuar fue presionado")
     if jugando:
         ventana.show_juego(nombre, equipo, uri)
-        equipos, _ = juego.obtener_datos_juego()
+        equipos, _, _, _ = juego.obtener_datos_juego()
         cliente.actualizar_tabla(equipos, "Juego", "¡¡Te has unido a una partida en curso!!", equipo)
         equipo_jugando = juego.get_equipo_jugando()
         if equipo_jugando == equipo:
@@ -36,6 +36,7 @@ def continuar(nombre, equipo, uri, jugando):
 def desconectar():
     juego.desconectar(uri_cliente, cliente.nombre_actual)
     ventana.after(100, ventana.destroy)
+
 
 def salir():
     ventana.after(100, ventana.destroy)

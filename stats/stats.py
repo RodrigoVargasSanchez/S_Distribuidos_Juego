@@ -7,10 +7,13 @@ if not os.path.exists('graficos'):
     os.makedirs('graficos')
 
 # Guardar el nombre del archivo en una variable
-nombre_archivo = "log_central.csv"
+nombre_archivo = "logs_centralizados.log"
 
 # Leer el archivo CSV
-df = pd.read_csv(nombre_archivo)
+df = pd.read_csv(nombre_archivo, sep=',')
+
+
+df = df.sort_values(by='timestamp', ascending=True)
 
 # ----------------------------------
 # Función para eliminar archivo si existe
@@ -51,7 +54,7 @@ id_juego = 'juego1'
 juego1_data = df[df['juego_id'] == id_juego]
 
 # Filtrar solo las filas que tienen jugador (acciones de jugadores)
-acciones_jugadores = juego1_data[juego1_data['jugador'].notna() & (df['tipo_evento'] == 'fin')]
+acciones_jugadores = juego1_data[juego1_data['resultado'].notna() & (df['tipo_evento'] == 'fin')]
 
 # Contar jugadas realizadas por jugador y equipo
 jugadas_por_jugador = acciones_jugadores.groupby(['jugador', 'equipo']).size().reset_index(name='cantidad')
@@ -123,10 +126,12 @@ plt.close()
 # ----------------------------------
 
 # Filtrar solo los eventos de creación de equipos
-df_creacion = df[(df['tipo_evento'] == 'ini') & (df['accion'] == 'crea-jugador')]
+df_creacion = df[(df['tipo_evento'] == 'fin') & (df['accion'] == 'crea-jugador')]
 
 # Convertir la columna timestamp a formato datetime
 df_creacion['timestamp'] = pd.to_datetime(df_creacion['timestamp'])
+
+df_creacion = df_creacion.sort_values(by='timestamp', ascending=True)
 
 # Obtener el primer y último timestamp
 start_time = df_creacion['timestamp'].min()

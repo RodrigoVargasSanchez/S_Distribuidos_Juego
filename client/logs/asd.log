@@ -1,6 +1,0 @@
-2025-05-11T16:42:43.375906, ini, juego1, crea-jugador, equipo1, asd
-2025-05-11T16:42:43.377804, fin, juego1, crea-jugador, equipo1, asd
-2025-05-11T16:42:48.255768, ini, juego1, inicio-juego, equipo1, asd
-2025-05-11T16:42:50.134142, ini, juego1, lanza-dado, equipo1, asd, 6
-2025-05-11T16:42:50.136581, fin, juego1, lanza-dado, equipo1, asd, 6
-2025-05-11T16:42:50.137793, fin, juego1, inicio-juego, equipo1, asd

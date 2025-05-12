@@ -1,6 +1,7 @@
 import Pyro5.api
 import random
 import threading
+import os
 
 @Pyro5.api.expose
 class ServicioJuego:
@@ -96,7 +97,7 @@ class ServicioJuego:
             self.equipos[equipo]["uris"].append(uri_cliente)
             with Pyro5.api.Proxy(uri_cliente) as cliente_proxy:
                 cliente_proxy.aprobacion_confirmada(self.juego_iniciado)
-                cliente_proxy.log("ini", "crea-jugador")
+                cliente_proxy.log("fin", "crea-jugador")
                 print(f"[✓] {nombre} fue aprobado y se unió al equipo {equipo}")
             return True, f"{nombre} fue aprobado por todos y se ha unido al equipo {equipo}."
         else:
@@ -119,6 +120,7 @@ class ServicioJuego:
                 idx = data["integrantes"].index(nombre)
                 del data["integrantes"][idx]
                 del data["uris"][idx]
+                os.remove(f'../client/logs/{nombre}.log')
                 print(f"[✗] {nombre} se ha desconectado.")
 
                 if not data["integrantes"]:
@@ -195,8 +197,6 @@ class ServicioJuego:
         mensaje = f"El orden de los equipos es: {self.orden_equipos}. Comienza el equipo {self.orden_equipos[self.turno_equipo_actual]}."
         self.jugar(titulo, mensaje)
 
-        self.juego_id += 1
-
     def jugar(self, titulo, mensaje):
         if not self.juego_iniciado:
             return
@@ -269,6 +269,7 @@ class ServicioJuego:
                     hilo.start()
                     hilos.append(hilo)
             self.juego_iniciado = False
+            self.juego_id += 1
             return
 
         # Pasar al siguiente equipo y continuar el juego

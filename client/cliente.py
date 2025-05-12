@@ -3,6 +3,9 @@ import tkinter as tk
 import logging
 from datetime import datetime
 from clienteRMI import ClienteRMI
+import subprocess
+import sys
+import os
 
 @Pyro5.api.expose
 class Cliente:
@@ -36,12 +39,12 @@ class Cliente:
 
     def log(self, estado, accion, valor=None):
         timestamp = datetime.now().isoformat()
-        componentes = [timestamp, estado, f"juego{str(self.juego_id)}", accion, f"equipo{str(self.equipo_actual)}", self.nombre_actual]
+        componentes = [timestamp,estado,f"juego{str(self.juego_id)}",accion,f"equipo{str(self.equipo_actual)}",self.nombre_actual]
 
         if valor is not None:
             componentes.append(str(valor))
 
-        mensaje = ", ".join(componentes)
+        mensaje = ",".join(componentes)
         self.logger.info(mensaje)
 
     
@@ -207,10 +210,19 @@ class Cliente:
         def actualizar_ui():
             if self.VentanaModal and self.callback_salir:
                 self.VentanaModal(self.ventana, "!!!!", f"¡¡El equipo {equipo} ha ganado el juego!!", 
-                          botones=[("Salir", self.callback_salir)])
+                          botones=[("Salir", self.ejecutar_stats)])
                 
         if self.ventana:
             self.ventana.after(0, actualizar_ui)
+
+    def ejecutar_stats(self):
+        ruta_script = os.path.join(os.path.dirname(__file__), '../stats/ejecutar.py')
+        subprocess.Popen([sys.executable, ruta_script])
+        
+        # Luego cerrar la ventana principal
+        if self.ventana:
+            self.ventana.destroy()
+
 
     def centralizar_logs(self):
         cliente_rmi = ClienteRMI(f"{self.nombre_actual}.log")
