@@ -277,7 +277,7 @@ class ServicioJuego:
         # titulo = "Juego"
         # mensaje = f"El equipo {equipo} ha lanzado y avanza {str(puntos_avance)} posiciones."
         titulo = "Juego"
-        mensaje = f"El equipo {equipo} a lanzado avanzando {str(puntos_avance)} posiciones."
+        mensaje = f"El equipo {equipo} ha lanzado avanzando {str(puntos_avance)} posiciones."
 
         self.jugar(titulo, mensaje)
 
